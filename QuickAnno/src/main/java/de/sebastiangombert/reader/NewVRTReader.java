@@ -161,7 +161,7 @@ public class NewVRTReader extends JCasCollectionReader_ImplBase {
 
 				if (k != 0 && !parts[0].equals(".") && !parts[0].equals(",") && !parts[0].equals("!") 
 						&& !parts[0].equals(":") && !parts[0].equals(";") 
-						&& !parts[0].equals("?") && !parts[0].equals(")")) {
+						&& !parts[0].equals("?") && !parts[0].equals("(")) {
 					casBuild.add(" ");
 				}
 				casBuild.add(parts[0]);
