@@ -25,13 +25,20 @@ import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import de.sebastiangombert.annotators.LegacyToNewDeclarativeConverter;
+import de.sebastiangombert.annotators.MLToCorpusClassificationAnnotator;
+import de.sebastiangombert.ml.MLSet;
 import de.sebastiangombert.model.Corpus;
 import de.sebastiangombert.model.TextContainer;
 import de.sebastiangombert.reader.CorpusReader;
 import de.sebastiangombert.reader.NewVRTReader;
 import de.sebastiangombert.reader.LegacyVRTReader;
 import de.sebastiangombert.writer.CorpusWriter;
+import de.sebastiangombert.writer.MLSetConsumer;
 import de.sebastiangombert.writer.VRTWriter;
+
+import de.tudarmstadt.ukp.dkpro.core.matetools.MateParser;
+import de.tudarmstadt.ukp.dkpro.core.matetools.MatePosTagger;
+import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -44,6 +51,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -65,6 +73,8 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.Callback;
+import weka.classifiers.trees.LMT;
+import weka.core.converters.*;
 import javafx.stage.Stage;
 
 public class GuiController {
@@ -140,6 +150,9 @@ public class GuiController {
 	@FXML
 	RadioButton differingSentences;
 	
+	@FXML
+	Button proposeAnnotationsButton;
+	
 	private List<String[]> iaaLines = new ArrayList<>();
 	
 	private void solveBlurriness(TextArea area) {
@@ -200,13 +213,13 @@ public class GuiController {
 		 fileChooser.setTitle("Open File");
 		 fileChooser.getExtensionFilters().addAll(
 		         new ExtensionFilter("VRT File", "*.vrt", "*.VRT"));
-		 File file = fileChooser.showOpenDialog(primary);
-		 if (file != null) {
+		 List<File> files = fileChooser.showOpenMultipleDialog(primary);
+		 if (files.size() > 0) {
 		        try {
 		        	this.corpus = new Corpus();
 		        	
-					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILE,
-					        file, NewVRTReader.IGNORE_SENTENCES, true);
+					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILES,
+					        files, NewVRTReader.IGNORE_SENTENCES, false, NewVRTReader.IGNORE_POS_TAGS, false);
 					
 					AnalysisEngine sentenceSplitter = createEngine(OpenNlpSegmenter.class, 
 							OpenNlpSegmenter.PARAM_LANGUAGE, "de",
@@ -245,13 +258,13 @@ public class GuiController {
 		 fileChooser.setTitle("Open File");
 		 fileChooser.getExtensionFilters().addAll(
 		         new ExtensionFilter("VRT File", "*.vrt", "*.VRT"));
-		 File file = fileChooser.showOpenDialog(primary);
-		 if (file != null) {
+		 List<File> files = fileChooser.showOpenMultipleDialog(primary);
+		 if (files.size() > 0) {
 		        try {
 					this.corpus = new Corpus();
 		        	
-					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILE,
-					        file, NewVRTReader.IGNORE_SENTENCES, false);
+					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILES,
+					        files, NewVRTReader.IGNORE_SENTENCES, false, NewVRTReader.IGNORE_POS_TAGS, false);
 					
 					AnalysisEngine corpusWriter = createEngine(CorpusWriter.class,
 							CorpusWriter.PARAM_CORPUS, this.corpus.getId());
@@ -398,7 +411,6 @@ public class GuiController {
 			         new ExtensionFilter("All Files", "*.*"));
 			 File fl = fileChooser.showSaveDialog(primary);
 			 if (fl != null) {
-				 System.out.println("Size: " + this.corpus.getTextList().size());
 				 
 				 if (this.index < this.corpus.getSentenceIndices().size() -1)
 					 this.corpus.setBreakIndices(this.corpus.getSentenceIndices().get(index)[0], this.corpus.getSentenceIndices().get(index)[1]);
@@ -619,9 +631,12 @@ public class GuiController {
 		 for (File file : files) {
 		        try {
 					Corpus corpus = new Corpus();
+					
+					List<File> singleFileList = new ArrayList<>();
+					singleFileList.add(file);
 		        	
-					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILE,
-					        file, NewVRTReader.IGNORE_SENTENCES, false);
+					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILES,
+					        singleFileList, NewVRTReader.IGNORE_SENTENCES, false, NewVRTReader.IGNORE_POS_TAGS, false);
 					
 					AnalysisEngine corpusWriter = createEngine(CorpusWriter.class,
 							CorpusWriter.PARAM_CORPUS, corpus.getId());
@@ -780,5 +795,173 @@ public class GuiController {
 				return true;
 		return false;
 	}
+	
+	@FXML
+	public void generateMLTemp(Event e) {
+		 FileChooser fileChooser = new FileChooser();
+		 fileChooser.setTitle("Open File");
+		 fileChooser.getExtensionFilters().addAll(
+		         new ExtensionFilter("VRT File", "*.vrt", "*.VRT"));
+		 List<File> files = fileChooser.showOpenMultipleDialog(primary);
+		 if (files.size() > 0) {
+			 Platform.runLater(() -> {
+			        try {
+			        	MLSet mlset = new MLSet();
+
+						CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILES,
+						        files, NewVRTReader.IGNORE_SENTENCES, false, NewVRTReader.IGNORE_POS_TAGS, false);
+						
+						AnalysisEngine ner = createEngine(OpenNlpNamedEntityRecognizer.class, OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "nemgp");
+						
+						AnalysisEngine mlConsumer = createEngine(MLSetConsumer.class,
+								MLSetConsumer.PARAM_ML_SET, mlset.getId(),
+								MLSetConsumer.PARAM_CREATE_TRAINING_SET, true,
+								MLSetConsumer.PARAM_PERCENT_TOTAL, (float)0.01,
+								MLSetConsumer.PARAM_PERCENT_DECLARATIVE, (float)0.007,
+								MLSetConsumer.PARAM_NUM_WORD_FEATURES, 30);
+						
+						SimplePipeline.runPipeline(vrtReader, ner, mlConsumer);
+
+
+					} catch (ResourceInitializationException e1) {
+						e1.printStackTrace();
+						Alert alert = new Alert(AlertType.CONFIRMATION, "Error. Could not open file(s)", ButtonType.CANCEL);
+						alert.showAndWait();
+
+						if (alert.getResult() == ButtonType.CANCEL) {
+							Platform.exit();
+						}
+					} catch (UIMAException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+			 });
+		 }
+		 
+
+	}
+	
+	private MLSet mlModelSet = null;
+	
+	 @FXML
+	 public void openTrainingCorpus(Event e) {
+		 FileChooser fileChooser = new FileChooser();
+		 fileChooser.setTitle("Open File");
+		 fileChooser.getExtensionFilters().addAll(
+		         new ExtensionFilter("VRT File", "*.vrt", "*.VRT"));
+		 List<File> files = fileChooser.showOpenMultipleDialog(primary);
+		 
+		 if (files.size() > 0) {
+		        try {
+		        	this.mlModelSet = new MLSet();
+		        	this.mlModelSet.setFileName(RandomStringUtils.random(25));
+
+					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILES,
+					        files, NewVRTReader.IGNORE_SENTENCES, false, NewVRTReader.IGNORE_POS_TAGS, false);
+					
+					AnalysisEngine ner = createEngine(OpenNlpNamedEntityRecognizer.class, OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "nemgp");
+					
+					AnalysisEngine mlConsumer = createEngine(MLSetConsumer.class,
+							MLSetConsumer.PARAM_ML_SET, this.mlModelSet.getId(),
+							MLSetConsumer.PARAM_CREATE_TRAINING_SET, true,
+							MLSetConsumer.PARAM_PERCENT_TOTAL, (float)0.01,
+							MLSetConsumer.PARAM_PERCENT_DECLARATIVE, (float)0.007,
+							MLSetConsumer.PARAM_NUM_WORD_FEATURES, 30);
+					
+					SimplePipeline.runPipeline(vrtReader, ner, mlConsumer);
+					
+					this.mlModelSet.saveArffTemp(true);
+					this.mlModelSet.buildClassificationModel();
+					
+					this.proposeAnnotationsButton.setDisable(false);
+				} catch (ResourceInitializationException e1) {
+					e1.printStackTrace();
+					Alert alert = new Alert(AlertType.CONFIRMATION, "Error. Could not open file(s)", ButtonType.CANCEL);
+					alert.showAndWait();
+
+					if (alert.getResult() == ButtonType.CANCEL) {
+						Platform.exit();
+					}
+				} catch (UIMAException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}	 
+		 }
+	 }
+	 
+	 private Corpus classificationCorpus = null;
+	 
+	 @FXML
+	 public void proposeAnnotations(Event e) {
+		 FileChooser fileChooser = new FileChooser();
+		 fileChooser.setTitle("Open File");
+		 fileChooser.getExtensionFilters().addAll(
+		         new ExtensionFilter("VRT File", "*.vrt", "*.VRT"));
+		 List<File> files = fileChooser.showOpenMultipleDialog(primary);
+		 
+		 if (files.size() > 0) {
+		        try {
+		        	this.classificationCorpus = new Corpus();
+		        	
+					CollectionReader vrtReader = createReader(NewVRTReader.class, NewVRTReader.PARAM_LIST_FILES,
+					        files, NewVRTReader.IGNORE_SENTENCES, false, NewVRTReader.IGNORE_POS_TAGS, false);
+					
+					AnalysisEngine sentenceSplitter = createEngine(OpenNlpSegmenter.class, 
+							OpenNlpSegmenter.PARAM_LANGUAGE, "de",
+							OpenNlpSegmenter.PARAM_WRITE_TOKEN, false);
+					
+					AnalysisEngine ner = createEngine(OpenNlpNamedEntityRecognizer.class, OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "nemgp");
+					
+					AnalysisEngine mlConsumer = createEngine(MLSetConsumer.class,
+							MLSetConsumer.PARAM_ML_SET, this.mlModelSet.getId(),
+							MLSetConsumer.PARAM_CREATE_TRAINING_SET, false,
+							MLSetConsumer.PARAM_PERCENT_TOTAL, (float)0.01,
+							MLSetConsumer.PARAM_PERCENT_DECLARATIVE, (float)0.007,
+							MLSetConsumer.PARAM_NUM_WORD_FEATURES, 30);
+					
+					AnalysisEngine corpusWriter = createEngine(CorpusWriter.class, CorpusWriter.PARAM_CORPUS, this.classificationCorpus.getId());
+					
+					SimplePipeline.runPipeline(vrtReader, sentenceSplitter, ner, mlConsumer, corpusWriter);
+					
+					this.mlModelSet.saveArffTemp(false);
+					this.mlModelSet.classify();
+					
+					CollectionReader corpusReader = createReader(CorpusReader.class, 
+							 CorpusReader.PARAM_CORPUS, this.classificationCorpus.getId());
+					
+					AnalysisEngine declConverter = createEngine(MLToCorpusClassificationAnnotator.class, 
+							MLToCorpusClassificationAnnotator.PARAM_ML_SET, this.mlModelSet.getId());
+					
+					SimplePipeline.runPipeline(corpusReader, declConverter, corpusWriter);
+					
+				} catch (ResourceInitializationException e1) {
+					e1.printStackTrace();
+					Alert alert = new Alert(AlertType.CONFIRMATION, "Error. Could not open file(s)", ButtonType.CANCEL);
+					alert.showAndWait();
+
+					if (alert.getResult() == ButtonType.CANCEL) {
+						Platform.exit();
+					}
+				} catch (UIMAException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}				 
+		 }
+	 }
 	
 }
