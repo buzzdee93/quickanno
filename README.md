@@ -1,4 +1,4 @@
-# QuickAnoo
+# QuickAnno
 QuickAnno is a simple application for annotation declarative speech acts in corpora in the VRT (Vertical Text format). It was developed during a university project.
 
 # How to use it
