@@ -105,19 +105,7 @@ public class MLSet {
 			strBuild.append(" numeric");
 			strBuild.append(LF);
 		}
-		strBuild.append("@attribute outcome {");
-		if (!labels.contains("Declarative")) {
-			strBuild.append("Declarative");
-			strBuild.append(",");
-		}
-		
-		for (String label : labels) {
-			strBuild.append(label);
-			strBuild.append(',');
-		}
-		
-		strBuild.deleteCharAt(strBuild.length() -1);
-		strBuild.append('}');
+		strBuild.append("@attribute outcome {None,Declarative}");
 		
 		strBuild.append(LF);
 		strBuild.append(LF);
