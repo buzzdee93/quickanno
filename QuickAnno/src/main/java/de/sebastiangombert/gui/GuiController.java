@@ -1,3 +1,20 @@
+/* 
+ * This file is part of the QuickAnno application (https://github.com/buzzdee93/quickanno).
+ * Copyright (c) 2019 Sebastian Gombert.
+ * 
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package de.sebastiangombert.gui;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
@@ -36,8 +53,7 @@ import de.sebastiangombert.writer.CorpusWriter;
 import de.sebastiangombert.writer.MLSetConsumer;
 import de.sebastiangombert.writer.VRTWriter;
 
-import de.tudarmstadt.ukp.dkpro.core.matetools.MateParser;
-import de.tudarmstadt.ukp.dkpro.core.matetools.MatePosTagger;
+
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
 import javafx.application.Platform;

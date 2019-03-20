@@ -61,15 +61,6 @@
       <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
     </repository>
   </repositories>
-  <dependencies>
-    <dependency>
-      <groupId>com.oracle</groupId>
-      <artifactId>javafx</artifactId>
-      <version>2.2.3</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/jfxrt.jar</systemPath>
-    </dependency>
-  </dependencies>
   <dependencyManagement>
     <dependencies>
       <dependency>
