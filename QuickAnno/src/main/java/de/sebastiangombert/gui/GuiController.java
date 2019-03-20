@@ -952,7 +952,7 @@ public class GuiController {
 					
 					SimplePipeline.runPipeline(vrtReader, ner, mlConsumer);
 					
-					this.mlModelSet.saveArffTemp(true);
+					//this.mlModelSet.saveArffTemp(true);
 					this.mlModelSet.buildClassificationModel();
 					
 					StringBuilder trainingCorpusNameBuilder = new StringBuilder();
@@ -1052,7 +1052,7 @@ public class GuiController {
 					
 					SimplePipeline.runPipeline(vrtReader, sentenceSplitter, ner, mlConsumer, corpusWriter);
 					
-					this.mlModelSet.saveArffTemp(false);
+					//this.mlModelSet.saveArffTemp(false);
 					this.mlModelSet.classify();
 					
 					CollectionReader corpusReader = createReader(CorpusReader.class, 

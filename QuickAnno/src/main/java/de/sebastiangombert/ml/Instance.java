@@ -48,4 +48,5 @@ public class Instance {
 	public void setPredictedLabel(String predictedLabel) {
 		this.predictedLabel = predictedLabel;
 	}
+	
 }

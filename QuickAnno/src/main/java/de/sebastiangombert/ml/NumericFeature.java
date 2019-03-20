@@ -36,4 +36,7 @@ public class NumericFeature extends Feature<Double>{
 		return true;
 	}
 
+	public double getRawFeatureContent() {
+		return this.feature;
+	}
 }

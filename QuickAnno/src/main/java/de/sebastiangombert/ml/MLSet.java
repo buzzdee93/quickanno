@@ -34,6 +34,8 @@ import java.util.Random;
 
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.trees.LMT;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -225,6 +227,33 @@ public class MLSet {
 		this.fileName = fileName;
 	}
 	
+	private Instances toWekaDataSet(boolean training) {
+		List<Instance> instances = training ? this.trainingInstances : this.classificationInstances;
+
+		ArrayList<Attribute> atts = new ArrayList<>(instances.get(0).getFeatures().length +1);
+		for (int i = 0; i < instances.get(0).getFeatures().length; i++)
+			atts.add(new Attribute(instances.get(0).getFeatures()[i].getName()));
+		
+		ArrayList<String> outcomeLabels = new ArrayList<>();
+		outcomeLabels.add("None");
+		outcomeLabels.add("Declarative");
+		atts.add(new Attribute("outcome", outcomeLabels));
+		
+		Instances insts = new Instances("Declarative Speech Acts", atts, instances.size());
+		
+		for (Instance inst : instances) {
+			double[] featureValues = new double[inst.getFeatures().length + 1];
+			for (int i = 0; i < inst.getFeatures().length; i++)
+				featureValues[i] = ((NumericFeature)inst.getFeatures()[i]).getRawFeatureContent();
+			
+			featureValues[featureValues.length -1] = inst.getLabel().equals("None") ? 0 : 1; 
+			
+			insts.add(new DenseInstance(1.0, featureValues));
+		}
+		
+		return insts;
+	}
+	
 	public void buildClassificationModel() throws Exception {
 		this.classifier = new LMT();
 		
@@ -234,7 +263,7 @@ public class MLSet {
 		
 		this.classifier.setOptions(classifierOptions);
 		
-		Instances data = new ConverterUtils.DataSource(outPath + this.fileName + "_training.arff").getDataSet();
+		Instances data = this.toWekaDataSet(true);
 		data.setClassIndex(data.numAttributes() -1);
 		this.classifier.buildClassifier(data);
 		this.eval = new Evaluation(data);
@@ -242,7 +271,7 @@ public class MLSet {
 	}
 	
 	public void classify() throws Exception {
-		Instances data = new ConverterUtils.DataSource(outPath + this.fileName + "_classification.arff").getDataSet();
+		Instances data = this.toWekaDataSet(false);
 		data.setClassIndex(data.numAttributes() -1);
 		
 		for (int i = 0; i < data.size(); i++) {
