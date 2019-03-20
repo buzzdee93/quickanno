@@ -61,13 +61,16 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.InputEvent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.web.HTMLEditor;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
@@ -153,6 +156,9 @@ public class GuiController {
 	@FXML
 	Button proposeAnnotationsButton;
 	
+	@FXML
+	WebView mlGuidelines;
+	
 	private List<String[]> iaaLines = new ArrayList<>();
 	
 	private void solveBlurriness(TextArea area) {
@@ -167,10 +173,12 @@ public class GuiController {
 	public void init(Stage primary) {
 		this.primary = primary;
 		
-		guidelines.getEngine().loadContent(guidelineEditor.getHtmlText());
+		this.guidelines.getEngine().loadContent(guidelineEditor.getHtmlText());
+		this.mlGuidelines.getEngine().loadContent(guidelineEditor.getHtmlText());
 		
 		guidelineEditor.addEventHandler(InputEvent.ANY, e -> {
 			guidelines.getEngine().loadContent(guidelineEditor.getHtmlText());
+			mlGuidelines.getEngine().loadContent(this.guidelineEditor.getHtmlText());
 		});
 		
 		contextSizeSlider.valueProperty().addListener((o1, o2, o3) -> {
@@ -574,6 +582,7 @@ public class GuiController {
 				
 				this.guidelineEditor.setHtmlText(build.toString());
 				this.guidelines.getEngine().loadContent(this.guidelineEditor.getHtmlText());
+				this.mlGuidelines.getEngine().loadContent(this.guidelineEditor.getHtmlText());
 			} catch (UnsupportedEncodingException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -673,6 +682,19 @@ public class GuiController {
 			 TableColumn<String[], String> sentenceCol = 
 					 (TableColumn<String[], String>) interAnnotatorTable.getColumns().get(0);
 			 
+			 sentenceCol.setCellFactory(new Callback<TableColumn<String[], String>, TableCell<String[], String>>() {
+			        public TableCell<String[], String> call(TableColumn<String[], String> param) {
+			            return new TableCell<String[], String>() {
+			                @Override
+			                public void updateItem(String item, boolean empty) {
+			                    super.updateItem(item, empty);
+			                    this.setTextFill(Color.web("#c8d5d5"));
+			                    this.setText(item);
+			                }
+			            };
+			        }
+			    });
+			 
 			 sentenceCol.setCellValueFactory(p -> {
 				 return new SimpleStringProperty(p.getValue()[0]);
 			 });
@@ -686,6 +708,23 @@ public class GuiController {
 						 (TableColumn<String[], String>) interAnnotatorTable.getColumns().get(interAnnotatorTable.getColumns().size() -1);
 				 
 				 final int idx = i +1;
+				 
+				 col.setCellFactory(new Callback<TableColumn<String[], String>, TableCell<String[], String>>() {
+				        public TableCell<String[], String> call(TableColumn<String[], String> param) {
+				            return new TableCell<String[], String>() {
+				                @Override
+				                public void updateItem(String item, boolean empty) {
+				                    super.updateItem(item, empty);
+				                    if (!isEmpty() && item.equals("Declarative")) {
+				                        this.setTextFill(Color.YELLOW);
+				                    } else {
+				                    	this.setTextFill(Color.web("#c8d5d5"));
+				                    }
+				                    this.setText(item);
+				                }
+				            };
+				        }
+				    });
 				 
 				 col.setCellValueFactory(p -> {
 					 return new SimpleStringProperty(p.getValue()[idx]);
@@ -847,6 +886,30 @@ public class GuiController {
 	private MLSet mlModelSet = null;
 	
 	 @FXML
+	 Label trainingCorpusLabel;
+	 
+	 @FXML
+	 Label accuracyLabel;
+	 
+	 @FXML
+	 Label precisionDeclarativeLabel;
+	 
+	 @FXML
+	 Label recallDeclarativeLabel;
+	 
+	 @FXML
+	 Label f1DeclarativeLabel;
+	 
+	 @FXML
+	 Label precisionNoneLabel;
+	 
+	 @FXML
+	 Label recallNoneLabel;
+	 
+	 @FXML
+	 Label f1NoneLabel;
+	
+	 @FXML
 	 public void openTrainingCorpus(Event e) {
 		 FileChooser fileChooser = new FileChooser();
 		 fileChooser.setTitle("Open File");
@@ -876,6 +939,38 @@ public class GuiController {
 					this.mlModelSet.saveArffTemp(true);
 					this.mlModelSet.buildClassificationModel();
 					
+					StringBuilder trainingCorpusNameBuilder = new StringBuilder();
+					for (File fl : files) {
+						trainingCorpusNameBuilder.append("\"");
+						trainingCorpusNameBuilder.append(fl.getName());
+						trainingCorpusNameBuilder.append("\",");
+					}
+					trainingCorpusNameBuilder.deleteCharAt(trainingCorpusNameBuilder.length() -1);
+					
+					double truePositives = this.mlModelSet.getEval().correct();
+					double all = this.mlModelSet.getTrainingInstances().size();
+					double accuracy = truePositives / all;
+					
+					double precisionDecl = this.mlModelSet.getEval().precision(1);
+					double recallDecl = this.mlModelSet.getEval().recall(1);
+					double f1Decl = this.mlModelSet.getEval().fMeasure(1);
+					
+					double precisionNone = this.mlModelSet.getEval().precision(0);
+					double recallNone = this.mlModelSet.getEval().recall(0);
+					double f1None = this.mlModelSet.getEval().fMeasure(0);
+					
+					this.trainingCorpusLabel.setText(trainingCorpusNameBuilder.toString());
+					
+					this.accuracyLabel.setText("Accuracy: " + accuracy);
+					
+					this.precisionDeclarativeLabel.setText("Precision Declarative: " + precisionDecl);
+					this.recallDeclarativeLabel.setText("Recall Declarative: " + recallDecl);
+					this.f1DeclarativeLabel.setText("F1 Declarative: " + f1Decl);
+					
+					this.precisionNoneLabel.setText("Precision None: " + precisionNone);
+					this.recallNoneLabel.setText("Recall None: " + recallNone);
+					this.f1NoneLabel.setText("F1 None: " + f1None);
+					
 					this.proposeAnnotationsButton.setDisable(false);
 				} catch (ResourceInitializationException e1) {
 					e1.printStackTrace();
@@ -899,6 +994,15 @@ public class GuiController {
 	 }
 	 
 	 private Corpus classificationCorpus = null;
+	 
+	 @FXML
+	 TableView<String[]> mlTable;
+	 
+	 @FXML
+	 TableColumn<String[], String> mlSentenceColumn;
+	 
+	 @FXML
+	 TableColumn<String[], String> mlAnnotationColumn;
 	 
 	 @FXML
 	 public void proposeAnnotations(Event e) {
@@ -943,6 +1047,7 @@ public class GuiController {
 					
 					SimplePipeline.runPipeline(corpusReader, declConverter, corpusWriter);
 					
+					fillMlTable();
 				} catch (ResourceInitializationException e1) {
 					e1.printStackTrace();
 					Alert alert = new Alert(AlertType.CONFIRMATION, "Error. Could not open file(s)", ButtonType.CANCEL);
@@ -961,6 +1066,124 @@ public class GuiController {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}				 
+		 }
+	 }
+	 
+	 private void fillMlTable() {
+		 this.mlTable.getItems().clear();
+		 
+
+		 
+		 this.mlSentenceColumn.setCellFactory(new Callback<TableColumn<String[], String>, TableCell<String[], String>>() {
+		        public TableCell<String[], String> call(TableColumn<String[], String> param) {
+		            return new TableCell<String[], String>() {
+		                @Override
+		                public void updateItem(String item, boolean empty) {
+		                    super.updateItem(item, empty);
+		                    this.setTextFill(Color.web("#c8d5d5"));
+		                    this.setText(item);
+		                }
+		            };
+		        }
+		    });
+		 
+		 this.mlSentenceColumn.setCellValueFactory(p -> {
+			 return new SimpleStringProperty(p.getValue()[0]);
+		 });		
+		 
+		 this.mlAnnotationColumn.setCellFactory(new Callback<TableColumn<String[], String>, TableCell<String[], String>>() {
+		        public TableCell<String[], String> call(TableColumn<String[], String> param) {
+		        	
+		            TableCell<String[], String> cell = new TableCell<String[], String>() {
+		                @Override
+		                public void updateItem(String item, boolean empty) {
+		                    super.updateItem(item, empty);
+		                    if (!empty && item.equals("Declarative"))
+		                    	this.setTextFill(Color.YELLOW);
+		                    else 
+		                    	this.setTextFill(Color.web("#c8d5d5"));
+		                    this.setText(item);
+		                }
+		                  
+		            };
+		            
+		            cell.setOnMousePressed(e -> {
+                    	if (((String[])cell.getTableRow().getItem())[1].equals("Declarative")) {
+                    		cell.setTextFill(Color.web("#c8d5d5"));
+                    		((String[])cell.getTableRow().getItem())[1] = "None";
+                    		cell.setText("None");
+                    	} else {
+                    		cell.setTextFill(Color.YELLOW);
+                    		((String[])cell.getTableRow().getItem())[1] = "Declarative";
+                    		cell.setText("Declarative");
+                    	}
+                    	
+                    });
+		            
+		            return cell;
+		        }
+		    });
+		 
+		 mlAnnotationColumn.setCellValueFactory(p -> {
+			 return new SimpleStringProperty(p.getValue()[1]);
+		 });
+		 
+		 for (int[] sentenceIndices : this.classificationCorpus.getSentenceIndices()) {
+			 String[] elem = new String[2];
+			 
+			 elem[0] = this.classificationCorpus.getCorpusText().substring(sentenceIndices[0], sentenceIndices[1]);
+
+			 boolean isDecl = false;
+			 for (int[] declIndex : this.classificationCorpus.getDeclIndices()) {
+				 if (declIndex[0] == sentenceIndices[0] && declIndex[1] == sentenceIndices[1]) {
+					 isDecl = true;
+					 break;
+				 }
+			 }
+			 
+			 elem[1] = isDecl ? "Declarative" : "None";
+			 
+			 this.mlTable.getItems().add(elem);
+		 }
+		 
+	 }
+	 
+	 @FXML
+	 public void exportMLAnnotation(Event e) {
+		 if (this.classificationCorpus != null) {
+			 FileChooser fileChooser = new FileChooser();
+			 fileChooser.setTitle("Save File");
+			 fileChooser.getExtensionFilters().addAll(
+			         new ExtensionFilter("VRT File", "*.vrt", "*.VRT"),
+			         new ExtensionFilter("All Files", "*.*"));
+			 File fl = fileChooser.showSaveDialog(primary);
+			 
+			 if (fl != null) {
+				 this.classificationCorpus.getDeclIndices().clear();
+				 
+				 for (int i = 0; i < this.classificationCorpus.getSentenceIndices().size(); i++) {
+					 
+				 }
+				 
+				 for (int i = 0; i < this.mlTable.getItems().size(); i++)
+					 if (this.mlTable.getItems().get(i)[1].equals("Declarative"))
+						 this.classificationCorpus.getDeclIndices().add(this.classificationCorpus.getSentenceIndices().get(i));
+
+				 try {
+					CollectionReader corpusReader = createReader(CorpusReader.class, 
+							 CorpusReader.PARAM_CORPUS, this.classificationCorpus.getId());
+					
+					AnalysisEngine vrtWriter = createEngine(VRTWriter.class,
+							VRTWriter.PARAM_FILE, fl);
+					
+					SimplePipeline.runPipeline(corpusReader, vrtWriter); 
+				 } catch (Exception ex) {
+					 ex.printStackTrace();
+				 }
+				 
+			 }
+			 
+			 
 		 }
 	 }
 	

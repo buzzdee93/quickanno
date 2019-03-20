@@ -89,12 +89,19 @@ public class MLSet {
 			strBuild.append(LF);
 		}
 		strBuild.append("@attribute outcome {");
+		if (!labels.contains("Declarative")) {
+			strBuild.append("Declarative");
+			strBuild.append(",");
+		}
+		
 		for (String label : labels) {
 			strBuild.append(label);
 			strBuild.append(',');
 		}
+		
 		strBuild.deleteCharAt(strBuild.length() -1);
 		strBuild.append('}');
+		
 		strBuild.append(LF);
 		strBuild.append(LF);
 		strBuild.append("@data");
@@ -223,7 +230,8 @@ public class MLSet {
 		this.classifier.setOptions(classifierOptions);
 		
 		Instances data = new ConverterUtils.DataSource(outPath + this.fileName + "_training.arff").getDataSet();
-		
+		data.setClassIndex(data.numAttributes() -1);
+		this.classifier.buildClassifier(data);
 		this.eval = new Evaluation(data);
 		eval.crossValidateModel(classifier, data, 10, new Random(1));
 	}

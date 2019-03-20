@@ -80,8 +80,6 @@ public class VRTWriter extends JCasConsumer_ImplBase {
 			
 			if (texts.size() > 0) {
 				for (Text text : texts) {
-					System.out.println("text there in corpuswriter");
-					
 					StringBuilder textBuild = new StringBuilder();
 					textBuild.append("<text date=\"");
 					textBuild.append(text.getDate());

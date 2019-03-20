@@ -199,7 +199,7 @@
                               <GridPane layoutX="255.0" layoutY="259.0" prefHeight="778.0" prefWidth="1146.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                 <columnConstraints>
                                   <ColumnConstraints hgrow="SOMETIMES" percentWidth="1.0" prefWidth="100.0" />
-                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" prefWidth="100.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" prefWidth="100.0" />
                                     <ColumnConstraints hgrow="SOMETIMES" percentWidth="1.0" prefWidth="100.0" />
                                     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                     <ColumnConstraints hgrow="SOMETIMES" percentWidth="1.0" prefWidth="100.0" />
@@ -212,7 +212,7 @@
                                   <RowConstraints percentHeight="1.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
-                                    <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" text="VRT exportieren" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                                    <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#exportMLAnnotation" text="VRT exportieren" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                                     <TitledPane collapsible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                        <content>
                                           <TabPane GridPane.columnIndex="1" GridPane.rowIndex="1">
@@ -221,18 +221,18 @@
                                                    <content>
                                                       <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                                          <children>
-                                                            <GridPane prefHeight="636.0" prefWidth="2000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                            <GridPane prefHeight="636.0" prefWidth="457.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                                <children>
-                                                                  <Label text="(no training corpus selected)" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                                  <Button fx:id="openTrainingCorpus" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Open Corpus and Train Model" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-                                                                  <Button fx:id="proposeAnnotaionsButton" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#proposeAnnotations" text="Open VRT and propose Annotations" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" GridPane.valignment="CENTER" />
-                                                                  <Label text="F1 Declarative:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                                                                  <Label text="Accuracy:" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                                  <Label text="Precision Declarative:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                                                                  <Label text="Recall Declarative:" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                                                  <Label text="Precision None:" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                                                  <Label text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                                                  <Label text="Recall None:" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                                                                  <Label fx:id="trainingCorpusLabel" text="(no training corpus selected)" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                                  <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#openTrainingCorpus" text="Open Corpus and Train Model" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                                                                  <Button fx:id="proposeAnnotationsButton" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#proposeAnnotations" text="Open VRT and propose Annotations" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" GridPane.valignment="CENTER" />
+                                                                  <Label fx:id="f1DeclarativeLabel" text="F1 Declarative:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                                                  <Label fx:id="accuracyLabel" text="Accuracy:" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                                  <Label fx:id="precisionDeclarativeLabel" text="Precision Declarative:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                                                  <Label fx:id="recallDeclarativeLabel" text="Recall Declarative:" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                                  <Label fx:id="precisionNoneLabel" text="Precision None:" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                                  <Label fx:id="recallNoneLabel" text="Recall None:" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                                                                  <Label fx:id="f1NoneLabel" text="F1 None:" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                                                </children>
                                                                <columnConstraints>
                                                                   <ColumnConstraints hgrow="SOMETIMES" percentWidth="1.0" prefWidth="100.0" />
@@ -259,7 +259,7 @@
                                                   <content>
                                                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                                          <children>
-                                                            <WebView layoutX="115.0" layoutY="110.0" prefHeight="636.0" prefWidth="457.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                            <WebView fx:id="mlGuidelines" layoutX="115.0" layoutY="110.0" onMouseClicked="#switchToGuidelinesEditor" prefHeight="636.0" prefWidth="457.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                                          </children>
                                                       </AnchorPane>
                                                   </content>
@@ -268,11 +268,10 @@
                                           </TabPane>
                                        </content>
                                     </TitledPane>
-                                    <TableView prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                    <TableView fx:id="mlTable" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="3" GridPane.rowIndex="1">
                                       <columns>
-                                        <TableColumn prefWidth="387.0" text="Sentence" />
-                                        <TableColumn prefWidth="150.0" text="Declarative" />
-                                          <TableColumn prefWidth="115.0" text="None" />
+                                        <TableColumn fx:id="mlSentenceColumn" prefWidth="690.0" text="Sentence" />
+                                        <TableColumn fx:id="mlAnnotationColumn" prefWidth="134.0" text="Annotation" />
                                       </columns>
                                     </TableView>
                                  </children>

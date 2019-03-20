@@ -51,6 +51,12 @@ public class CorpusWriter extends JCasConsumer_ImplBase {
 			corpus.getTextList().add(textContainer);
 		}
 		
+		corpus.getTokenList().clear();
+		corpus.getPosList().clear();
+		corpus.getLemmaList().clear();
+		corpus.getSentenceIndices().clear();
+		corpus.getDeclIndices().clear();
+		corpus.getMaybeIndices().clear();
 		for (Sentence sent : JCasUtil.select(aJCas, Sentence.class)) {
 			int[] sentenceIndices = new int[2];
 			sentenceIndices[0] = sent.getBegin();
@@ -80,7 +86,7 @@ public class CorpusWriter extends JCasConsumer_ImplBase {
 				anchorIndices[1] = sent.getEnd();
 				corpus.setBreakIndices(anchorIndices);
 			}
-				
+			
 			for (Token tk : JCasUtil.selectCovered(aJCas, Token.class, sent)) {
 				corpus.getTokenList().add(new Container<Token>(tk, "getCoveredText"));
 				corpus.getPosList().add(new Container<POS>(JCasUtil.selectCovered(aJCas, POS.class, tk).get(0), "getPosValue"));

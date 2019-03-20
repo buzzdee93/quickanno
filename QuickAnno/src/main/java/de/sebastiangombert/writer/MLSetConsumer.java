@@ -176,7 +176,7 @@ public class MLSetConsumer extends JCasConsumer_ImplBase {
 			
 			NumericFeature sentenceLength = new NumericFeature();
 			sentenceLength.setName("sentenceLength");
-			sentenceLength.setFeatureContent(((double)JCasUtil.selectCovered(aJCas, Token.class, sent).size()) / ((double)longestSentence));
+			sentenceLength.setFeatureContent(((double)JCasUtil.selectCovered(aJCas, Token.class, sent).size()));
 			features[i] = sentenceLength;
 			i++;
 			
@@ -189,7 +189,7 @@ public class MLSetConsumer extends JCasConsumer_ImplBase {
 			
 			NumericFeature containsPredefinedKeyword = new NumericFeature();
 			containsPredefinedKeyword.setName("containsPredefinedKeyword");
-			containsPredefinedKeyword.setFeatureContent(pred / predefinedKeywords.length);
+			containsPredefinedKeyword.setFeatureContent(pred);
 			features[i] = containsPredefinedKeyword;
 			i++;
 			
@@ -205,7 +205,7 @@ public class MLSetConsumer extends JCasConsumer_ImplBase {
 			
 			NumericFeature containsPredefinedLemma = new NumericFeature();
 			containsPredefinedLemma.setName("containsPredefinedLemma");
-			containsPredefinedLemma.setFeatureContent(containsLemma / predefinedLemmata.length);
+			containsPredefinedLemma.setFeatureContent(containsLemma);
 			features[i] = containsPredefinedLemma;
 			i++;
 			

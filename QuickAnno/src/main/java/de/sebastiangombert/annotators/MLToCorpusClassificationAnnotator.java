@@ -23,7 +23,7 @@ public class MLToCorpusClassificationAnnotator extends JCasAnnotator_ImplBase {
 		
 		int i = 0;
 		for (Sentence sent : JCasUtil.select(aJCas, Sentence.class)) {
-			if (mlSet.getClassificationInstances().get(i).getLabel().equals("Declarative")) {
+			if (mlSet.getClassificationInstances().get(i).getPredictedLabel().equals("Declarative")) {
 				Declarative decl = new Declarative(aJCas, sent.getBegin(), sent.getEnd());
 				decl.addToIndexes();
 			}
